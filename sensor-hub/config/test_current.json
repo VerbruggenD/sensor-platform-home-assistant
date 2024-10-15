@@ -1,0 +1,14 @@
+{
+    "mac-address": "28:cd:c1:0d:6d:xx",
+    "sensors": [
+        {
+            "type": "ACS721",
+            "name": "test-current",
+            "interface": "Analog",
+            "pins": {
+                "data": 26
+            },
+            "room": "lab"
+        }
+    ]
+}

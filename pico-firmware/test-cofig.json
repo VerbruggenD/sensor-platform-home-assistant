@@ -1,0 +1,47 @@
+{
+    "sensors": [
+        {
+            "type": "DHT11",
+            "name": "Living Room DHT11",
+            "pin": 4,
+            "room": "Living Room"
+        },
+        {
+            "type": "DHT11",
+            "name": "Bedroom DHT11",
+            "pin": 5,
+            "room": "Bedroom"
+        },
+        {
+            "type": "BME280",
+            "name": "Office BME280",
+            "interface": "I2C",
+            "pins": {
+                "sda": 21,
+                "scl": 22
+            },
+            "i2c_address": "0x76",
+            "room": "Office"
+        },
+        {
+            "type": "SPI_Sensor",
+            "name": "Garage SPI Sensor",
+            "interface": "SPI",
+            "pins": {
+                "miso": 19,
+                "mosi": 23,
+                "sclk": 18,
+                "cs": 5
+            },
+            "spi_bus": 1,
+            "room": "Garage"
+        }
+    ],
+    "mqtt": {
+        "broker": "mqtt.example.com",
+        "port": 1883,
+        "username": "user",
+        "password": "pass",
+        "device_id": "sensor_node_1"
+    }
+}
