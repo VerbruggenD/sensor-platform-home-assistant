@@ -111,8 +111,9 @@ def load_sensor_configs(config_folder):
                     json_data = json.load(file)
                     mac_address = json_data.get('mac-address')
                     sensors = json_data.get('sensors', [])
+                    actuators = json_data.get('actuators', [])
                     
-                    if mac_address and sensors:
+                    if mac_address and (sensors or actuators):
                         mac_address_normalized = mac_address.replace(":", "-")
                         json_data['mac-address'] = mac_address_normalized
                         sensor_configs[mac_address_normalized] = json_data

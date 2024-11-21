@@ -18,6 +18,7 @@ class Sensor:
         raise NotImplementedError("Subclasses should implement this method.")
     
     def set_mqtt_client(self, client):
+        """Add a reference to the mqtt client to send messages from here."""
         self.mqtt_client = client
 
     def add_measurement(self, measurement):
@@ -63,7 +64,7 @@ class Measurement:
             "device": {
                 "identifiers": [f"{sensor.mac_address}-{sensor.name}"],
                 "name": sensor.name,
-                "model": "MultiNode v1.0",
+                "model": "MultiNode v1.1",
                 "manufacturer": "Dieter Verbruggen"
             }
         }

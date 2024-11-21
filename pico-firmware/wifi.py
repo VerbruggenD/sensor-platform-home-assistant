@@ -2,10 +2,11 @@ import network
 import time
 import ubinascii
 import os
+import credentials
 
 # Wi-Fi credentials
-wifi_ssid = os.getenv('WIFI_SSID')
-wifi_password = os.getenv('WIFI_PASSWORD')
+wifi_ssid = credentials.wifi_ssid
+wifi_password = credentials.wifi_password
 
 def connect_wifi():
     wlan = network.WLAN(network.STA_IF)

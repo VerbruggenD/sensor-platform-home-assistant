@@ -3,6 +3,7 @@ import json
 # Assuming you have Sensor classes imported
 from sensorInterface import Sensor
 from dht_sensor import DHT11Sensor
+from switch import Switch
 
 class Config:
     def __init__(self, macAddress):
@@ -38,7 +39,7 @@ class Config:
             
             if sensor_type == 'DHT11':
                 # Handle DHT11 sensor
-                self.sensors.append(DHT11Sensor(self.mqtt_client, name, room, pins, self.macAddress))
+                self.sensors.append(DHT11Sensor(self.mqtt_client.client, name, room, pins, self.macAddress))
                 print(f"Added DHT sensor {name} to list")
             # elif sensor_type == 'BME280':
             #     # Handle BME280 sensor
@@ -48,6 +49,20 @@ class Config:
             #     self.sensors.append(SPISensor(name, room, pins, mac_address))
             else:
                 print(f"Unknown sensor type: {sensor_type}")
+
+        self.actuators = []
+        for actuator_data in config_data.get('actuators', []):
+            actuator_type = actuator_data.get('type')
+            name = actuator_data.get('name')
+            room = actuator_data.get('room')
+            pins = actuator_data.get('pins', {})
+
+            if actuator_type == 'switch':
+                self.actuators.append(Switch(self.mqtt_client, name, room, pins, self.macAddress))
+                print(f"Added relay {name} to list")
+            
+            else:
+                print(f"Unknown actuator type: {actuator_type}")
 
     def read_sensors(self):
         """Iterate through all sensors and poll them if the interval has passed."""

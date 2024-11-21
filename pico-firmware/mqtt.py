@@ -2,18 +2,20 @@ import os
 import time
 import json
 from umqtt.simple import MQTTClient
+import credentials
 
 # MQTT Broker settings
-broker_address = os.getenv('MQTT_BROKER_HOST')  # Replace with your broker address
-broker_port = os.getenv('MQTT_BROKER_PORT')
-username = os.getenv('MQTT_USERNAME')
-password = os.getenv('MQTT_PASSWORD')
+broker_address = credentials.broker_address
+broker_port = credentials.broker_port
+username = credentials.username
+password = credentials.password
 
 class MQTTHandler:
     def __init__(self, client_id):
         self.client = MQTTClient(client_id, broker_address, port=broker_port, user=username, password=password, keepalive=120)
         self.client.set_callback(self.on_message)
         self.config_handler = None
+        self.handlers = []
         self.connect()
     
     def connect(self):
@@ -37,6 +39,10 @@ class MQTTHandler:
     def check_messages(self):
         self.client.check_msg()  # Non-blocking call to check messages
 
+    def add_handler(self, handler):
+        self.handlers.append(handler)
+        print(f"Added handler {handler} to list")
+
     def on_message(self, topic, msg):
         print(f"Received message from {topic}: {msg}")
         topic = topic.decode()
@@ -51,7 +57,8 @@ class MQTTHandler:
             self.handle_heartbeat(topic, msg)
 
         else:
-            print(f"No handler for topic {topic}")
+            for handler in self.handlers:
+                handler.on_message(topic, msg)
 
     def handle_heartbeat(self, topic, msg):
         # Respond to heartbeat requests
