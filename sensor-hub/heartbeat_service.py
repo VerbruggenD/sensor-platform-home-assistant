@@ -63,15 +63,15 @@ def send_heartbeat(mac_address):
     topic = f"heartbeat/{mac_address}"
     try:
         mqttc_heartbeat.publish(topic, payload="ping", qos=0)
-        logger.info(f"Sent heartbeat to {topic}")
+        # logger.info(f"Sent heartbeat to {topic}")
 
         event = threading.Event()
         device_events[mac_address] = event
 
         if not event.wait(timeout=5.0):
             handle_timeout(mac_address)
-        else:
-            logger.info(f"Heartbeat response received in time for {mac_address}. Current state: {devices[mac_address].state}")
+        # else:
+        #     logger.info(f"Heartbeat response received in time for {mac_address}. Current state: {devices[mac_address].state}")
 
     except Exception as e:
         logger.error(f"Failed to send heartbeat to {mac_address}: {e}")
