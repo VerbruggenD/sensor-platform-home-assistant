@@ -3,8 +3,32 @@ import os
 import paho.mqtt.client as mqtt
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+from logging.handlers import TimedRotatingFileHandler
+
+# Create a logger
+logger = logging.getLogger('my_logger')
+logger.setLevel(logging.INFO)  # Set the log level (DEBUG, INFO, WARNING, etc.)
+
+# Create a TimedRotatingFileHandler
+log_file = 'config-server.log'
+file_handler = TimedRotatingFileHandler(
+    log_file, 
+    when='midnight',  # Rotate logs at midnight
+    interval=1,       # Rotate every 1 day
+    backupCount=7     # Keep logs for 7 days (1 week)
+)
+
+# Create a StreamHandler for terminal logging
+console_handler = logging.StreamHandler()
+
+# Create a formatter and add it to both handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+# Add the handlers to the logger
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
 
 broker_address = os.getenv('MQTT_BROKER_HOST')  # Replace with your broker address
 broker_port = os.getenv('MQTT_BROKER_PORT')
@@ -14,26 +38,26 @@ password = os.getenv('MQTT_PASSWORD')
 sensor_configs = {}
 
 def on_connect(client, userdata, flags, reason_code):
-    logging.info(f"Connected with result code {reason_code}")
+    logger.info(f"Connected with result code {reason_code}")
     client.subscribe("general/config_request")
 
 def on_message(client, userdata, message):
     payload = message.payload.decode()
     try:
         mac_address = payload
-        logging.info(f"Payload MAC address is {mac_address}")
+        logger.info(f"Payload MAC address is {mac_address}")
         
         sensor_config = sensor_configs.get(mac_address)
         
         if sensor_config:
             response_message = json.dumps(sensor_config)
             client.publish("general/config_response", response_message)
-            logging.info(f"Published config for MAC address {mac_address}: {response_message}")
+            logger.info(f"Published config for MAC address {mac_address}: {response_message}")
         else:
-            logging.warning(f"No configuration found for MAC address {mac_address}")
+            logger.warning(f"No configuration found for MAC address {mac_address}")
     
     except json.JSONDecodeError:
-        logging.error("Received invalid JSON data")
+        logger.error("Received invalid JSON data")
 
 def load_sensor_configs(config_folder):
     global sensor_configs
@@ -51,7 +75,7 @@ def load_sensor_configs(config_folder):
                     mac_address_normalized = mac_address.replace(":", "-")
                     json_data['mac-address'] = mac_address_normalized
                     sensor_configs[mac_address_normalized] = json_data
-    logging.info(f"All {len(sensor_configs)} sensors or actuators loaded")
+    logger.info(f"All {len(sensor_configs)} sensors or actuators loaded")
     
 def main():
     config_folder = 'config'

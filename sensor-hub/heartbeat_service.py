@@ -7,8 +7,32 @@ from datetime import datetime
 import threading
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+from logging.handlers import TimedRotatingFileHandler
+
+# Create a logger
+logger = logging.getLogger('my_logger')
+logger.setLevel(logging.INFO)  # Set the log level (DEBUG, INFO, WARNING, etc.)
+
+# Create a TimedRotatingFileHandler
+log_file = 'heartbeat.log'
+file_handler = TimedRotatingFileHandler(
+    log_file, 
+    when='midnight',  # Rotate logs at midnight
+    interval=1,       # Rotate every 1 day
+    backupCount=7     # Keep logs for 7 days (1 week)
+)
+
+# Create a StreamHandler for terminal logging
+console_handler = logging.StreamHandler()
+
+# Create a formatter and add it to both handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+# Add the handlers to the logger
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
 
 broker_address = os.getenv('MQTT_BROKER_HOST')  # Replace with your broker address
 broker_port = os.getenv('MQTT_BROKER_PORT')
@@ -21,14 +45,14 @@ device_events = {}
 
 def on_heartbeat_connect(client, userdata, flags, rc):
     if rc == 0:
-        logging.info("Heartbeat thread connected successfully")
+        logger.info("Heartbeat thread connected successfully")
     else:
-        logging.error(f"Heartbeat thread connection failed with result code {rc}")
+        logger.error(f"Heartbeat thread connection failed with result code {rc}")
     client.subscribe("heartbeat/response")
 
 def on_heartbeat_message(client, userdata, msg):
     mac_address = msg.payload.decode("utf-8")
-    logging.info(f"Received response {mac_address}")
+    logger.info(f"Received response {mac_address}")
     if mac_address in devices:
         devices[mac_address].newPing(True)  # Device responded, mark it as online
         if mac_address in device_events:
@@ -39,7 +63,7 @@ def send_heartbeat(mac_address):
     topic = f"heartbeat/{mac_address}"
     try:
         mqttc_heartbeat.publish(topic, payload="ping", qos=0)
-        logging.info(f"Sent heartbeat to {topic}")
+        logger.info(f"Sent heartbeat to {topic}")
 
         event = threading.Event()
         device_events[mac_address] = event
@@ -47,14 +71,14 @@ def send_heartbeat(mac_address):
         if not event.wait(timeout=5.0):
             handle_timeout(mac_address)
         else:
-            logging.info(f"Heartbeat response received in time for {mac_address}. Current state: {devices[mac_address].state}")
+            logger.info(f"Heartbeat response received in time for {mac_address}. Current state: {devices[mac_address].state}")
 
     except Exception as e:
-        logging.error(f"Failed to send heartbeat to {mac_address}: {e}")
+        logger.error(f"Failed to send heartbeat to {mac_address}: {e}")
 
 def handle_timeout(mac_address):
     devices[mac_address].newPing(False)
-    logging.warning(f"No response from {mac_address}, current state: {devices[mac_address].state}")
+    logger.warning(f"No response from {mac_address}, current state: {devices[mac_address].state}")
 
 class State(Enum):
     ONLINE = 1
@@ -73,9 +97,9 @@ class DeviceHeartbeat:
             for sensor in self.sensors:
                 topic = f"{sensor['room']}/{self.macAddress}-{sensor['name']}/availability"
                 mqttc_heartbeat.publish(topic, payload=availability, qos=0)
-                logging.info(f"Published '{availability}' to {topic}")
+                logger.info(f"Published '{availability}' to {topic}")
         except Exception as e:
-            logging.error(f"Failed to publish availability for {self.macAddress}: {e}")
+            logger.error(f"Failed to publish availability for {self.macAddress}: {e}")
 
     def badPing(self):
         if self.state == State.DISRUPTED:
@@ -120,9 +144,9 @@ def load_sensor_configs(config_folder):
                         
                         if mac_address_normalized not in devices:
                             devices[mac_address_normalized] = DeviceHeartbeat(mac_address_normalized, sensors, State.OFFLINE)
-        logging.info(f"Loaded sensor configurations for {len(devices)} devices")
+        logger.info(f"Loaded sensor configurations for {len(devices)} devices")
     except Exception as e:
-        logging.error(f"Failed to load sensor configurations: {e}")
+        logger.error(f"Failed to load sensor configurations: {e}")
 
     return sensor_configs
 
@@ -142,11 +166,11 @@ def main():
 
         mqttc_heartbeat.loop_start()  # Start MQTT loop in background
 
-        logging.info("Starting heartbeat logic thread")
+        logger.info("Starting heartbeat logic thread")
         while True:
             cycle_start_time = time.time()
             current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            logging.info(f"Current time: {current_time}")
+            logger.info(f"Current time: {current_time}")
 
             for mac_address, device in devices.items():
                 if device.state != State.DISABLED:
@@ -157,7 +181,7 @@ def main():
             time.sleep(sleep_duration)
     
     except Exception as e:
-        logging.error(f"Unexpected error in main loop: {e}")
+        logger.error(f"Unexpected error in main loop: {e}")
 
 if __name__ == "__main__":
     main()
