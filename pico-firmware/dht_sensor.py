@@ -6,7 +6,7 @@ import time
 # Specific Sensor Implementation for DHT11
 class DHT11Sensor(Sensor):
     def __init__(self, mqtt_client, name, room, pins, mac_address):
-        super().__init__(name, room, "DHT11", "digital-IO", pins, mac_address)
+        super().__init__(name, room, "DHT11", "digital-IO", pins, mac_address, 10)
         
         # Initialize the sensor on the specified pin
         self.dht_pin = machine.Pin(pins['data'])  # Access the pin using key 'data'
@@ -19,10 +19,6 @@ class DHT11Sensor(Sensor):
         }
 
         self.set_mqtt_client(mqtt_client)
-
-        self.interval = 10
-        self.last_measurement = 0
-
         self.discover()
     
     def read_measurement(self):
@@ -42,10 +38,3 @@ class DHT11Sensor(Sensor):
         except OSError as e:
             print(f"Failed to read DHT11 sensor: {e} on pin {self.dht_pin}")
             return {"temperature": None, "humidity": None}
-        
-    def poll_sensor(self):
-        """Poll the sensor and read its measurement if the interval has passed."""
-        current_time = time.time()
-        if current_time - self.last_measurement >= self.interval:
-            self.read_measurement()
-            self.last_measurement = current_time

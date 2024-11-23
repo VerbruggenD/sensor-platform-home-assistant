@@ -4,6 +4,7 @@ import json
 from sensorInterface import Sensor
 from dht_sensor import DHT11Sensor
 from switch import Switch
+from bme680_sensor import Bme680Sensor
 
 class Config:
     def __init__(self, macAddress):
@@ -41,9 +42,10 @@ class Config:
                 # Handle DHT11 sensor
                 self.sensors.append(DHT11Sensor(self.mqtt_client.client, name, room, pins, self.macAddress))
                 print(f"Added DHT sensor {name} to list")
-            # elif sensor_type == 'BME280':
-            #     # Handle BME280 sensor
-            #     self.sensors.append(BME280Sensor(name, room, pins, mac_address))
+            elif sensor_type == 'BME680':
+                # Handle BME280 sensor
+                self.sensors.append(Bme680Sensor(self.mqtt_client.client, name, room, pins, self.macAddress))
+                print(f"Added BME680 sensor {name} to list")
             # elif sensor_type == 'SPI_Sensor':
             #     # Handle SPI_Sensor
             #     self.sensors.append(SPISensor(name, room, pins, mac_address))

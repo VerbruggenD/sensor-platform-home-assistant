@@ -8,7 +8,7 @@ class Switch(Actuator):
         super().__init__(name, room, "Switch", "digital-IO", pins, mac_address)
 
         # self.relay_pin = machine.Pin(pins['data'])
-        self.relay_pin = Pin("LED", Pin.OUT)
+        self.relay_pin = Pin(pins['data'], Pin.OUT)
         
         self.set_mqtt_client(mqtt_client)
 

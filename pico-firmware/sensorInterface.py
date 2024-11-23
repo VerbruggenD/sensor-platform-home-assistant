@@ -1,7 +1,8 @@
 import json
+import time
 
 class Sensor:
-    def __init__(self, name, room, sensor_type, interface, pins, mac_address):
+    def __init__(self, name, room, sensor_type, interface, pins, mac_address, interval):
         self.name = name  # E.g., DHT11_1, needs to be unique
         self.room = room  # E.g., Living Room
         self.type = sensor_type  # E.g., DHT11
@@ -9,7 +10,9 @@ class Sensor:
         self.pins = pins  # Dictionary of pins used
         self.mac_address = mac_address  # The MAC address passed from the main function
         self.mqtt_client = None
-        
+        self.interval = interval
+        self.last_measurement = 0
+
         # Using a dictionary for measurements instead of a list
         self.measurements = {}
     
@@ -39,8 +42,11 @@ class Sensor:
         print(f"Sent discovery topic for all measurements of sensor {self.name}")
 
     def poll_sensor(self):
-        """Method to be overridden for polling logic."""
-        pass
+        """Poll the sensor and read its measurement if the interval has passed."""
+        current_time = time.time()
+        if current_time - self.last_measurement >= self.interval:
+            self.read_measurement()
+            self.last_measurement = current_time
 
 class Measurement:
     def __init__(self, sensor, measurement_type, unit):

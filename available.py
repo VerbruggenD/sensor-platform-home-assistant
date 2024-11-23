@@ -9,7 +9,7 @@ MQTT_USERNAME = "dieter"
 MQTT_PASSWORD = "dieter"
 
 # Device details
-AVAILABILITY_TOPIC = f"living-room/28-cd-c1-0d-6d-27-onboard-led/availability"
+AVAILABILITY_TOPIC = f"room-dieter/28-cd-c1-0d-6d-28-space-heater/availability"
 
 # Initialize MQTT client
 client = mqtt.Client()
