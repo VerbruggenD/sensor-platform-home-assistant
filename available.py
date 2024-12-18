@@ -3,7 +3,7 @@ import json
 import time
 
 # MQTT broker details
-MQTT_BROKER = "home-automation.local"
+MQTT_BROKER = "production-docker.local"
 MQTT_PORT = 1883
 MQTT_USERNAME = "dieter"
 MQTT_PASSWORD = "dieter"

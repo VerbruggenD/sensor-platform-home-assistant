@@ -14,7 +14,7 @@ logger = logging.getLogger('my_logger')
 logger.setLevel(logging.INFO)  # Set the log level (DEBUG, INFO, WARNING, etc.)
 
 # Create a TimedRotatingFileHandler
-log_file = 'heartbeat.log'
+log_file = 'log/heartbeat.log'
 file_handler = TimedRotatingFileHandler(
     log_file, 
     when='midnight',  # Rotate logs at midnight
@@ -34,10 +34,21 @@ console_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
-broker_address = os.getenv('MQTT_BROKER_HOST')  # Replace with your broker address
-broker_port = os.getenv('MQTT_BROKER_PORT')
-username = os.getenv('MQTT_USERNAME')
-password = os.getenv('MQTT_PASSWORD')
+# Access environment variables
+broker_address = os.environ.get('BROKER_ADDRESS')
+broker_port = int(os.environ.get('BROKER_PORT', 1883))
+username = os.environ.get('USERNAME')
+password = os.environ.get('PASSWORD')
+
+logger.info(f"Broker Address: {broker_address}")
+logger.info(f"Broker Port: {broker_port}")
+logger.info(f"Username: {username}")
+logger.info(f"Password: {password}")
+
+logger.info(f"Broker Address: {broker_address} (type: {type(broker_address)})")
+logger.info(f"Broker Port: {broker_port} (type: {type(broker_port)})")
+logger.info(f"Username: {username} (type: {type(username)})")
+logger.info(f"Password: {password} (type: {type(password)})")
 
 sensor_configs = {}
 devices = {}
@@ -87,15 +98,20 @@ class State(Enum):
     DISABLED = 4
 
 class DeviceHeartbeat:
-    def __init__(self, macAddress, sensors, state):
+    def __init__(self, macAddress, sensors, actuators, state):
         self.macAddress = macAddress
         self.state = state
         self.sensors = sensors
+        self.actuators = actuators
 
     def publish_availability(self, availability):
         try:
             for sensor in self.sensors:
                 topic = f"{sensor['room']}/{self.macAddress}-{sensor['name']}/availability"
+                mqttc_heartbeat.publish(topic, payload=availability, qos=0)
+                logger.info(f"Published '{availability}' to {topic}")
+            for actuator in self.actuators:
+                topic = f"{actuator['room']}/{self.macAddress}-{actuator['name']}/availability"
                 mqttc_heartbeat.publish(topic, payload=availability, qos=0)
                 logger.info(f"Published '{availability}' to {topic}")
         except Exception as e:
@@ -143,7 +159,7 @@ def load_sensor_configs(config_folder):
                         sensor_configs[mac_address_normalized] = json_data
                         
                         if mac_address_normalized not in devices:
-                            devices[mac_address_normalized] = DeviceHeartbeat(mac_address_normalized, sensors, State.OFFLINE)
+                            devices[mac_address_normalized] = DeviceHeartbeat(mac_address_normalized, sensors, actuators, State.OFFLINE)
         logger.info(f"Loaded sensor configurations for {len(devices)} devices")
     except Exception as e:
         logger.error(f"Failed to load sensor configurations: {e}")

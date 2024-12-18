@@ -10,7 +10,7 @@ logger = logging.getLogger('my_logger')
 logger.setLevel(logging.INFO)  # Set the log level (DEBUG, INFO, WARNING, etc.)
 
 # Create a TimedRotatingFileHandler
-log_file = 'config-server.log'
+log_file = 'log/config-server.log'
 file_handler = TimedRotatingFileHandler(
     log_file, 
     when='midnight',  # Rotate logs at midnight
@@ -30,10 +30,21 @@ console_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
-broker_address = os.getenv('MQTT_BROKER_HOST')  # Replace with your broker address
-broker_port = os.getenv('MQTT_BROKER_PORT')
-username = os.getenv('MQTT_USERNAME')
-password = os.getenv('MQTT_PASSWORD')
+# Access environment variables
+broker_address = os.environ.get('BROKER_ADDRESS')
+broker_port = int(os.environ.get('BROKER_PORT', 1883))
+username = os.environ.get('USERNAME')
+password = os.environ.get('PASSWORD')
+
+logger.info(f"Broker Address: {broker_address}")
+logger.info(f"Broker Port: {broker_port}")
+logger.info(f"Username: {username}")
+logger.info(f"Password: {password}")
+
+logger.info(f"Broker Address: {broker_address} (type: {type(broker_address)})")
+logger.info(f"Broker Port: {broker_port} (type: {type(broker_port)})")
+logger.info(f"Username: {username} (type: {type(username)})")
+logger.info(f"Password: {password} (type: {type(password)})")
 
 sensor_configs = {}
 

@@ -24,6 +24,7 @@ RUN mkdir -p /var/log/supervisor
 
 # Mount the config folder
 VOLUME ["/app/config"]
+VOLUME ["/app/log"]
 
 # Expose MQTT port
 EXPOSE 1883
