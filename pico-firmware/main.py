@@ -103,7 +103,7 @@ def main():
             config.read_sensors()
             time.sleep(1)
 
-        # todo: the wifi connect does not work if the wifi is out of reach when first trying to connect
+        # TODO: the wifi connect does not work if the wifi is out of reach when first trying to connect
         except OSError:
             print("Client lost connection.")
             config.set_default_state(False)

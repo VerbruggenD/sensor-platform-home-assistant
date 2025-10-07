@@ -7,17 +7,23 @@ class Bme680Sensor(Sensor):
     def __init__(self, mqtt_client, name, room, pins, mac_address):
         super().__init__(name, room, "BME680", "I2C", pins, mac_address, 10)
 
+        voltage = Pin(21, Pin.OUT)  # Use pin 21 for power control
+        voltage.value(1)  # Turn on power to the sensor
+        time.sleep(10)  # Wait for the sensor to stabilize
+
+        print(("created voltage pin"))
+
         # Use integers for pins directly
-        i2c = I2C(0, scl=Pin(17), sda=Pin(16))  # Replace with your SDA/SCL pins
+        i2c = I2C(1, sda=Pin(18), scl=Pin(19), freq=400000)
         devices = i2c.scan()
 
-        # if devices:
-        #     print("I2C devices found:", [hex(device) for device in devices])
-        # else:
-        #     print("No I2C devices found.")
-        #     return
+        if devices:
+            print("I2C devices found:", [hex(device) for device in devices])
+        else:
+            print("No I2C devices found.")
+            return
 
-        # self.bme = BME680_I2C(i2c)  # Pass the I2C object to the BME680 driver
+        self.bme = BME680_I2C(i2c)  # Pass the I2C object to the BME680 driver
 
         self.measurements = {
             "temperature": Measurement(self, "temperature", "C"),

@@ -18,6 +18,7 @@ class Sensor:
     
     def read_measurement(self):
         """This method should be overridden by specific sensor implementations."""
+        # TODO: Send sensor down on failed sensor read, to trigger correct handling in automations
         raise NotImplementedError("Subclasses should implement this method.")
     
     def set_mqtt_client(self, client):
@@ -71,11 +72,12 @@ class Measurement:
             "device": {
                 "identifiers": [f"{sensor.mac_address}-{sensor.name}"],
                 "name": sensor.name,
-                "model": "MultiNode v1.1",
-                "manufacturer": "Dieter Verbruggen"
+                "model": "MultiNode v1.1", # TODO: correct version usage
+                "manufacturer": "Dieter Verbruggen" # TODO: insert company name
             }
         }
 
+    # TODO : code documentation
     def publish_value(self, client, value):
         client.publish(self.state_topic, str(value), qos=0)
         print(f"published value to {self.state_topic}")
