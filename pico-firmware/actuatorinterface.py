@@ -1,7 +1,7 @@
 import json
 
 class Actuator:
-    def __init__(self, name, room, actuator_type, interface, pins, mac_address, is_switch = True):
+    def __init__(self, name, room, actuator_type, interface, pins, mac_address, defaultState, is_switch = True):
         self.name = name  # E.g., DHT11_1, needs to be unique
         self.room = room  # E.g., Living Room
         self.type = actuator_type  # E.g., DHT11
@@ -12,6 +12,7 @@ class Actuator:
         self.state = None
         self.value = None
         self.is_switch = is_switch # switch by default, if false then light is used (can be dimmed)
+        self.defaultState = defaultState
 
         self.states = {}
         self.state_topic = f"{self.room}/{self.mac_address}-{self.name}/state" # topic to publish current state
@@ -53,8 +54,10 @@ class Actuator:
         # PWM, value from 0 to 100 and on/off
         raise NotImplementedError("Subclasses should implement this method.")
     
-    def set_state(self, state_name):
+    def set_state(self, state_name, publish=True):
         """This method should be overridden by specific actuator implementations."""
+        if state_name is None:
+            return
         print(f"Setting state: {state_name}")
         if state_name in self.states:
             self.state = self.states[state_name]

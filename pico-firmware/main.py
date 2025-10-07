@@ -78,23 +78,48 @@ def main():
 
     print("Config received, proceeding with the rest of the program...")
 
+    last_check = time.time()  # Track the last connection check
+    CHECK_INTERVAL = 30       # Check every 30 seconds (adjust as needed)
+
     # Main loop: keep checking for incoming messages
-    try:
-        print("Starting loop")
-        while True:
-            mqtt_comp.check_messages()  # Continually check for messages
+    print("Starting loop")
+    while True:
+        try:
+            # Only check Wi-Fi and MQTT connection periodically
+            if time.time() - last_check >= CHECK_INTERVAL:
+                if not wifi.check_connected():
+                    config.set_default_state(False)
+                    wifi.disconnect()
+                    time.sleep(1)
+                    wifi.connect_wifi()
+
+                mqtt_comp.client.ping()
+                print("Client is still connected.")
+
+                last_check = time.time()  # Reset the check timer
+            
+            # Regular tasks
+            mqtt_comp.check_messages()
             config.read_sensors()
-            time.sleep(0.5)
-    
-    except OSError as e:
-        print(f"OSError occurred: {e}. Reconnecting...")
-        mqtt_comp.connect()  # Reconnect on error
+            time.sleep(1)
 
-    except KeyboardInterrupt:
-        print("Exiting...")
+        # todo: the wifi connect does not work if the wifi is out of reach when first trying to connect
+        except OSError:
+            print("Client lost connection.")
+            config.set_default_state(False)
 
-    finally:
-        mqtt_comp.client.disconnect()
+            mqtt_comp.client.disconnect()
+            wifi.disconnect()
+
+            time.sleep(1)
+
+            wifi.connect_wifi()
+            mqtt_comp.reconnect()
+
+            mqtt_comp.subscribe("general/config_response")
+            mqtt_comp.subscribe(f"heartbeat/{macAddress}")
+            config.resubscribe()
+            config.send_state()
 
 if __name__ == "__main__":
     main()

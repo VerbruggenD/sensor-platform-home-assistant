@@ -24,3 +24,17 @@ def get_mac_address():
     mac_address = ubinascii.hexlify(wlan.config('mac'), ':').decode()
     mac_address = mac_address.replace(":", "-")
     return mac_address
+
+def check_connected():
+    wlan = network.WLAN(network.STA_IF)
+    return wlan.isconnected()
+
+def reconnect():
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    wlan.connect(wifi_ssid, wifi_password)
+
+def disconnect():
+    wlan = network.WLAN(network.STA_IF)
+    wlan.disconnect()
+    wlan.active(False)

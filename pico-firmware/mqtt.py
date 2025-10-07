@@ -28,6 +28,14 @@ class MQTTHandler:
                 print(f"Failed to connect to MQTT broker: {e}. Retrying in 5 seconds...")
                 time.sleep(5)
 
+    def reconnect(self):
+        try:
+            self.client.connect()
+            print("Successfully connected to MQTT Broker.")
+        except Exception as e:
+            print(f"Failed to connect to MQTT broker: {e}. Retrying in 60 seconds...")
+            time.sleep(60)
+
     def subscribe(self, topic):
         self.client.subscribe(topic)
         print(f"Subscribed to {topic}")
@@ -67,3 +75,6 @@ class MQTTHandler:
         print(f"response msg {response_message}")
         self.client.publish(response_topic, response_message, qos = 0)
         print(f"Heartbeat response sent: {response_message} to {response_topic}")
+
+    def check_connection(self):
+        return self.client.is_connected()

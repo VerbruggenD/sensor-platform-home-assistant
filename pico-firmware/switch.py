@@ -4,8 +4,8 @@ import time
 import json
 
 class Switch(Actuator):
-    def __init__(self, mqtt_client, name, room, pins, mac_address):
-        super().__init__(name, room, "Switch", "digital-IO", pins, mac_address)
+    def __init__(self, mqtt_client, name, room, pins, mac_address, defaultState):
+        super().__init__(name, room, "Switch", "digital-IO", pins, mac_address, defaultState)
 
         # self.relay_pin = machine.Pin(pins['data'])
         self.relay_pin = Pin(pins['data'], Pin.OUT)
@@ -21,7 +21,7 @@ class Switch(Actuator):
 
         self.subscribe_set()
         self.discover()
-        self.set_state("OFF")
+        self.set_default_state()
 
     def update_actuator(self):
         """Update the relay pin state based on the current state."""
@@ -42,5 +42,8 @@ class Switch(Actuator):
                 self.set_state(payload)
         except Exception as e:
             print(f"Error processing message: {e}")
+
+    def set_default_state(self, publish=True):
+        self.set_state(self.defaultState, publish)
 
     

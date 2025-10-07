@@ -14,7 +14,7 @@ class DHT11Sensor(Sensor):
         
         # Create a dictionary for measurements instead of a list
         self.measurements = {
-            "temperature": Measurement(self, "temperature", "C"),
+            "temperature": Measurement(self, "temperature", "\u00B0C"),  # Degree Celsius symbol
             "humidity": Measurement(self, "humidity", "%")
         }
 

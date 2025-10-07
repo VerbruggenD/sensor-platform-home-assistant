@@ -10,6 +10,7 @@ class Config:
     def __init__(self, macAddress):
         self.config_str = None
         self.sensors = []
+        self.actuators = []
         self.mqtt_client = None
         self.macAddress = macAddress
         self.config_received = False
@@ -24,6 +25,18 @@ class Config:
 
     def set_mqtt_client(self, client):
         self.mqtt_client = client
+
+    def set_default_state(self, publish=True):
+        for actuator in self.actuators:
+            actuator.set_default_state(publish)
+
+    def resubscribe(self):
+        for actuator in self.actuators:
+            actuator.subscribe_set()
+
+    def send_state(self):
+        for actuator in self.actuators:
+            actuator.publish_state()
     
     def parse_config(self, json_str):
         """Parse JSON configuration and instantiate sensor objects."""
@@ -58,9 +71,10 @@ class Config:
             name = actuator_data.get('name')
             room = actuator_data.get('room')
             pins = actuator_data.get('pins', {})
+            defaultState = actuator_data.get('defaultState', None)
 
             if actuator_type == 'switch':
-                self.actuators.append(Switch(self.mqtt_client, name, room, pins, self.macAddress))
+                self.actuators.append(Switch(self.mqtt_client, name, room, pins, self.macAddress, defaultState))
                 print(f"Added relay {name} to list")
             
             else:

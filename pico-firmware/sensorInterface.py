@@ -58,10 +58,11 @@ class Measurement:
         # Automatically generate discovery topic and payload for Home Assistant, including MAC address
         self.discovery_topic = f"homeassistant/sensor/{sensor.mac_address}-{sensor.name}-{self.measurement_type}/config"
         self.discovery_topic = self.discovery_topic.replace(" ", "-")
+
         self.discovery_payload = {
             "name": f"{sensor.name} {measurement_type}",
             "state_topic": self.state_topic,
-            "unit_of_measurement": self.unit.encode('utf-8').decode(),
+            "unit_of_measurement": self.unit,
             "device_class": measurement_type,
             "unique_id": f"{sensor.mac_address}-{sensor.name}-{measurement_type}",
             "availability_topic": f"{sensor.room}/{sensor.mac_address}-{sensor.name}/availability",
@@ -80,5 +81,5 @@ class Measurement:
         print(f"published value to {self.state_topic}")
     
     def discover(self, client):
-        client.publish(self.discovery_topic, json.dumps(self.discovery_payload), qos=0)
+        client.publish(self.discovery_topic, json.dumps(self.discovery_payload).encode('utf-8'), qos=0)
         print(f"Published discovery to {self.discovery_topic}")
