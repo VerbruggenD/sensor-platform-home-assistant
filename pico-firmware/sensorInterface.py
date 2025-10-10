@@ -1,6 +1,8 @@
 import json
 import time
 
+from version import short_version, project_name, company_name
+
 class Sensor:
     def __init__(self, name, room, sensor_type, interface, pins, mac_address, interval):
         self.name = name  # E.g., DHT11_1, needs to be unique
@@ -72,8 +74,8 @@ class Measurement:
             "device": {
                 "identifiers": [f"{sensor.mac_address}-{sensor.name}"],
                 "name": sensor.name,
-                "model": "MultiNode v1.1", # TODO: correct version usage
-                "manufacturer": "Dieter Verbruggen" # TODO: insert company name
+                "model": f"{project_name} {short_version}",
+                "manufacturer": company_name # TODO: insert company name
             }
         }
 
