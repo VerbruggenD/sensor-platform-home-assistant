@@ -1,0 +1,14 @@
+{
+    "mac-address": "28:cd:c1:0d:6d:27",
+    "actuators": [
+        {
+            "type": "relay",
+            "name": "onboard-led",
+            "interface": "digital-IO",
+            "pins": {
+                "data": 25
+            },
+            "room": "living-room"
+        }
+    ]
+}

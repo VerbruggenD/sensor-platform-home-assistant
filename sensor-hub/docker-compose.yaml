@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sensor-manager
+    ports:
+      - "1884:1883"
+    volumes:
+      - ./config:/app/config
+    restart: unless-stopped

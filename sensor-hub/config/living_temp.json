@@ -1,0 +1,14 @@
+{
+    "mac-address": "28:cd:c1:0d:6d:28",
+    "sensors": [
+        {
+            "type": "DHT11",
+            "name": "temp-living-1",
+            "interface": "IO",
+            "pins": {
+                "data": 21
+            },
+            "room": "living-room"
+        }
+    ]
+}
