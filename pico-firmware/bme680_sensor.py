@@ -5,6 +5,16 @@ from bme680 import *
 
 class Bme680Sensor(Sensor):
     def __init__(self, mqtt_client, name, room, pins, mac_address):
+        """
+        Initialize the BME680 sensor.
+
+        Parameters:
+            mqtt_client: The MQTT client for publishing data.
+            name (str): The name of the sensor.
+            room (str): The room where the sensor is located.
+            pins (dict): The pin configuration for the sensor.
+            mac_address (str): The MAC address of the device.
+        """
         super().__init__(name, room, "BME680", "I2C", pins, mac_address, 10)
 
         voltage = Pin(21, Pin.OUT)  # Use pin 21 for power control
@@ -36,6 +46,12 @@ class Bme680Sensor(Sensor):
         self.discover()
 
     def read_measurement(self):
+        """
+        Read measurements from the BME680 sensor and publish them via MQTT.
+
+        Returns:
+            dict: A dictionary containing temperature, humidity, pressure, and gas readings.
+        """
         if len(self.measurements) == 0:
             return
         try:

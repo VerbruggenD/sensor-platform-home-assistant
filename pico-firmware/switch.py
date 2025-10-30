@@ -5,6 +5,17 @@ import json
 
 class Switch(Actuator):
     def __init__(self, mqtt_client, name, room, pins, mac_address, defaultState):
+        """
+        Initialize the Switch actuator.
+
+        Parameters:
+            mqtt_client: The MQTT client for publishing data.
+            name (str): The name of the switch.
+            room (str): The room where the switch is located.
+            pins (dict): The pin configuration for the switch.
+            mac_address (str): The MAC address of the device.
+            defaultState (str): The default state of the switch ("ON" or "OFF").
+        """
         super().__init__(name, room, "Switch", "digital-IO", pins, mac_address, defaultState)
 
         # self.relay_pin = machine.Pin(pins['data'])
@@ -19,12 +30,14 @@ class Switch(Actuator):
         self.add_state(State("ON"))
         self.add_state(State("OFF"))
 
-        self.subscribe_set()
-        self.discover()
+        self.subscribe_command_topic()
+        self.publish_discovery()
         self.set_default_state()
 
     def update_actuator(self):
-        """Update the relay pin state based on the current state."""
+        """
+        Update the relay pin state based on the current state.
+        """
         if self.state.name == "ON":
             self.relay_pin.value(1)
             print("Updated switch to ON")
@@ -35,6 +48,13 @@ class Switch(Actuator):
             print(f"Unknown state: {self.state}")
 
     def on_message(self, topic, payload):
+        """
+        Handle incoming MQTT messages for the switch.
+
+        Parameters:
+            topic (str): The MQTT topic of the message.
+            payload (str): The payload of the message.
+        """
         try:
             if topic == self.command_topic:
                 
@@ -44,6 +64,12 @@ class Switch(Actuator):
             print(f"Error processing message: {e}")
 
     def set_default_state(self, publish=True):
+        """
+        Set the switch to its default state.
+
+        Parameters:
+            publish (bool): Whether to publish the state change to MQTT.
+        """
         self.set_state(self.defaultState, publish)
 
     

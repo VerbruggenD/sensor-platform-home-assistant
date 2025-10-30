@@ -7,16 +7,31 @@ from switch import Switch
 from bme680_sensor import Bme680Sensor
 
 class Config:
-    def __init__(self, macAddress):
+    """
+    Holds everything to do with the configuration of the node.
+    """
+    def __init__(self, mac_address):
+        """
+        Init of the config class. Everything initialized empty/None except mac address.
+
+        Parameters:
+            mac_address (string): the mac address of the wifi interface
+        """
         self.config_str = None
         self.sensors = []
         self.actuators = []
         self.mqtt_client = None
-        self.macAddress = macAddress
+        self.mac_address = mac_address
         self.config_received = False
 
-    def handle_config(self, topic, payload):
-        if self.macAddress not in payload:
+    def handle_config(self, payload):
+        """
+        Handle new incoming config.
+
+        Parameters:
+            payload (string): json as a string containing the actual config object to parse and create the instances.
+        """
+        if self.mac_address not in payload:
             print("Received config for other device")
             return
         
@@ -24,22 +39,45 @@ class Config:
         self.parse_config(payload)
 
     def set_mqtt_client(self, client):
+        """
+        Set the mqtt client for passing to the instances.
+
+        Parameters:
+            client (umqtt.Client): the client passed to the instances.
+        """
         self.mqtt_client = client
 
     def set_default_state(self, publish=True):
+        """
+        Activate the default state of the actuator.
+
+        Parameters:
+            publish (boolean): select if the state change needs to be published.
+        """
         for actuator in self.actuators:
             actuator.set_default_state(publish)
 
     def resubscribe(self):
+        """
+        Resubscribe to the command topics for every actuator registered in the list.
+        """
         for actuator in self.actuators:
             actuator.subscribe_set()
 
     def send_state(self):
+        """
+        Send the current state of every actuator in the list.
+        """
         for actuator in self.actuators:
             actuator.publish_state()
     
     def parse_config(self, json_str):
-        """Parse JSON configuration and instantiate sensor objects."""
+        """
+        Parse JSON configuration and instantiate sensor objects.
+        
+        Parameters:
+            json_str (string): json string containing the config for the sensor/actuator instance.
+        """
         # Load JSON data
         config_data = json.loads(json_str)
         
@@ -53,15 +91,12 @@ class Config:
             
             if sensor_type == 'DHT11':
                 # Handle DHT11 sensor
-                self.sensors.append(DHT11Sensor(self.mqtt_client.client, name, room, pins, self.macAddress))
+                self.sensors.append(DHT11Sensor(self.mqtt_client.client, name, room, pins, self.mac_address))
                 print(f"Added DHT sensor {name} to list")
             elif sensor_type == 'BME680':
                 # Handle BME280 sensor
-                self.sensors.append(Bme680Sensor(self.mqtt_client.client, name, room, pins, self.macAddress))
+                self.sensors.append(Bme680Sensor(self.mqtt_client.client, name, room, pins, self.mac_address))
                 print(f"Added BME680 sensor {name} to list")
-            # elif sensor_type == 'SPI_Sensor':
-            #     # Handle SPI_Sensor
-            #     self.sensors.append(SPISensor(name, room, pins, mac_address))
             else:
                 print(f"Unknown sensor type: {sensor_type}")
 
@@ -74,70 +109,15 @@ class Config:
             defaultState = actuator_data.get('defaultState', None)
 
             if actuator_type == 'switch':
-                self.actuators.append(Switch(self.mqtt_client, name, room, pins, self.macAddress, defaultState))
+                self.actuators.append(Switch(self.mqtt_client, name, room, pins, self.mac_address, defaultState))
                 print(f"Added relay {name} to list")
             
             else:
                 print(f"Unknown actuator type: {actuator_type}")
 
     def read_sensors(self):
-        """Iterate through all sensors and poll them if the interval has passed."""
+        """
+        Iterate through all sensors and poll them if the interval has passed.
+        """
         for sensor in self.sensors:
             sensor.poll_sensor()
-
-# # Example usage
-# config_json = '''
-# {
-#     "sensors": [
-#         {
-#             "type": "DHT11",
-#             "name": "Living Room DHT11",
-#             "interface": "IO",
-#             "pins": {
-#                 "data": 21
-#             },
-#             "room": "Living Room"
-#         },
-#         {
-#             "type": "DHT11",
-#             "name": "Bedroom DHT11",
-#             "interface": "IO",
-#             "pins": {
-#                 "data": 12
-#             },
-#             "room": "Bedroom"
-#         },
-#         {
-#             "type": "BME280",
-#             "name": "Office BME280",
-#             "interface": "I2C",
-#             "pins": {
-#                 "sda": 21,
-#                 "scl": 22
-#             },
-#             "i2c_address": "0x76",
-#             "room": "Office"
-#         },
-#         {
-#             "type": "SPI_Sensor",
-#             "name": "Garage SPI Sensor",
-#             "interface": "SPI",
-#             "pins": {
-#                 "miso": 19,
-#                 "mosi": 23,
-#                 "sclk": 18,
-#                 "cs": 5
-#             },
-#             "spi_bus": 1,
-#             "room": "Garage"
-#         }
-#     ]
-# }
-# '''
-
-# config = Config("12-34-56-78-90-12")
-# config.parse_config(config_json)
-
-# # Print out the parsed sensors and MQTT configuration
-# for sensor in config.sensors:
-#     print(f"Sensor Name: {sensor.name}, Type: {sensor.type}, Room: {sensor.room}")

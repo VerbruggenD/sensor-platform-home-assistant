@@ -54,14 +54,27 @@ sensor_configs = {}
 devices = {}
 device_events = {}
 
-def on_heartbeat_connect(client, userdata, flags, rc):
+def on_heartbeat_connect(client, rc):
+    """
+    Callback when the heartbeat client connects to the MQTT broker.
+
+    Parameters:
+        client: The MQTT client instance.
+        rc: The connection result code.
+    """
     if rc == 0:
         logger.info("Heartbeat thread connected successfully")
     else:
         logger.error(f"Heartbeat thread connection failed with result code {rc}")
     client.subscribe("heartbeat/response")
 
-def on_heartbeat_message(client, userdata, msg):
+def on_heartbeat_message(msg):
+    """
+    Callback when a heartbeat response message is received.
+
+    Parameters:
+        msg: The received MQTT message.
+    """
     mac_address = msg.payload.decode("utf-8")
     logger.info(f"Received response {mac_address}")
     if mac_address in devices:
@@ -71,6 +84,12 @@ def on_heartbeat_message(client, userdata, msg):
             del device_events[mac_address]
 
 def send_heartbeat(mac_address):
+    """
+    Send a heartbeat ping to the specified MAC address.
+
+    Parameters:
+        mac_address (str): The MAC address of the device.
+    """
     topic = f"heartbeat/{mac_address}"
     try:
         mqttc_heartbeat.publish(topic, payload="ping", qos=0)
@@ -88,10 +107,19 @@ def send_heartbeat(mac_address):
         logger.error(f"Failed to send heartbeat to {mac_address}: {e}")
 
 def handle_timeout(mac_address):
+    """
+    Handle a timeout for the specified MAC address.
+
+    Parameters:
+        mac_address (str): The MAC address of the device.
+    """
     devices[mac_address].newPing(False)
     logger.warning(f"No response from {mac_address}, current state: {devices[mac_address].state}")
 
 class State(Enum):
+    """
+    Device states for heartbeat monitoring.
+    """
     ONLINE = 1
     DISRUPTED = 2
     OFFLINE = 3
@@ -99,12 +127,27 @@ class State(Enum):
 
 class DeviceHeartbeat:
     def __init__(self, macAddress, sensors, actuators, state):
+        """
+        Initialize a DeviceHeartbeat instance.
+
+        Parameters:
+            macAddress (str): The MAC address of the device.
+            sensors (list): List of sensors associated with the device.
+            actuators (list): List of actuators associated with the device.
+            state (State): Initial state of the device.
+        """
         self.macAddress = macAddress
         self.state = state
         self.sensors = sensors
         self.actuators = actuators
 
     def publish_availability(self, availability):
+        """
+        Publish the availability status to MQTT topics for all sensors and actuators.
+
+        Parameters:
+            availability (str): The availability status ("online" or "offline").
+        """
         try:
             for sensor in self.sensors:
                 topic = f"{sensor['room']}/{self.macAddress}-{sensor['name']}/availability"
@@ -118,6 +161,9 @@ class DeviceHeartbeat:
             logger.error(f"Failed to publish availability for {self.macAddress}: {e}")
 
     def badPing(self):
+        """
+        Handle a bad ping (no response) from the device.
+        """
         if self.state == State.DISRUPTED:
             self.state = State.OFFLINE
             self.publish_availability("offline")
@@ -125,6 +171,9 @@ class DeviceHeartbeat:
             self.state = State.DISRUPTED
 
     def goodPing(self):
+        """
+        Handle a good ping (response) from the device.
+        """
         if self.state == State.DISABLED:
             return
         if self.state != State.ONLINE:
@@ -132,6 +181,12 @@ class DeviceHeartbeat:
             self.publish_availability("online")
 
     def newPing(self, result):
+        """
+        Process a new ping result.
+        
+        Parameters:
+            result (bool): True if the ping was successful, False otherwise.
+        """
         if self.state == State.DISABLED:
             return
         if not result:
@@ -140,6 +195,12 @@ class DeviceHeartbeat:
             self.goodPing()
 
 def load_sensor_configs(config_folder):
+    """
+    Load sensor configurations from JSON files in the specified folder.
+
+    Parameters:
+        config_folder (str): The folder containing JSON configuration files.
+    """
     global devices
     sensor_configs = {}
     

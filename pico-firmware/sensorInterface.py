@@ -5,6 +5,18 @@ from version import short_version, project_name, company_name
 
 class Sensor:
     def __init__(self, name, room, sensor_type, interface, pins, mac_address, interval):
+        """
+        Initialize the sensor with its properties.
+
+        Parameters:
+            name (string): the name of the sensor.
+            room (string): the room where the sensor is registered for, used in home assistant if it exists
+            sensor_type (string): the type of the sensor of which an instance is created
+            interface (string): the interface used to communicate with the sensor (digital-IO / SPI / I2C)
+            pins (dict): the pins registered for the instance for digital IO or data bus
+            mac_address (string): mac address of the wifi of the rpi pico w
+            interval (int): interval in seconds to poll the sensor
+        """
         self.name = name  # E.g., DHT11_1, needs to be unique
         self.room = room  # E.g., Living Room
         self.type = sensor_type  # E.g., DHT11
@@ -19,20 +31,33 @@ class Sensor:
         self.measurements = {}
     
     def read_measurement(self):
-        """This method should be overridden by specific sensor implementations."""
+        """
+        This method should be overridden by specific sensor implementations.
+        """
         # TODO: Send sensor down on failed sensor read, to trigger correct handling in automations
         raise NotImplementedError("Subclasses should implement this method.")
     
     def set_mqtt_client(self, client):
-        """Add a reference to the mqtt client to send messages from here."""
+        """
+        Add a reference to the mqtt client to send messages from here.
+        Parameters:
+            client: The MQTT client for publishing data.
+        """
         self.mqtt_client = client
 
     def add_measurement(self, measurement):
-        """Add a new measurement to the sensor's measurements dictionary."""
+        """
+        Add a new measurement to the sensor's measurements dictionary.
+        
+        Parameters:
+            measurement (Measurement): The measurement instance to add.
+        """
         self.measurements[measurement.measurement_type] = measurement
     
     def discover(self):
-        """Publish discovery messages for all measurements of the sensor."""
+        """
+        Publish discovery messages for all measurements of the sensor.
+        """
         if not self.mqtt_client:
             print("MQTT client is not set.")
             return
@@ -45,7 +70,9 @@ class Sensor:
         print(f"Sent discovery topic for all measurements of sensor {self.name}")
 
     def poll_sensor(self):
-        """Poll the sensor and read its measurement if the interval has passed."""
+        """
+        Poll the sensor and read its measurement if the interval has passed.
+        """
         current_time = time.time()
         if current_time - self.last_measurement >= self.interval:
             self.read_measurement()
@@ -53,6 +80,14 @@ class Sensor:
 
 class Measurement:
     def __init__(self, sensor, measurement_type, unit):
+        """
+        Initialize the measurement with its properties.
+        
+        Parameters:
+            sensor (Sensor): The sensor instance this measurement belongs to.
+            measurement_type (str): The type of measurement (e.g., "temperature").
+            unit (str): The unit of measurement (e.g., "°C").
+        """
         self.sensor = sensor  # Link to the sensor instance
         self.measurement_type = measurement_type  # E.g., "temperature" or "humidity"
         self.unit = unit  # E.g., "°C" or "%"
@@ -79,11 +114,23 @@ class Measurement:
             }
         }
 
-    # TODO : code documentation
     def publish_value(self, client, value):
+        """
+        Publish the measurement value to the MQTT broker.
+
+        Parameters:
+            client: The MQTT client for publishing data.
+            value: The measurement value to publish.
+        """
         client.publish(self.state_topic, str(value), qos=0)
         print(f"published value to {self.state_topic}")
     
     def discover(self, client):
+        """
+        Publish the discovery payload to the MQTT broker.
+
+        Parameters:
+            client: The MQTT client for publishing data.
+        """
         client.publish(self.discovery_topic, json.dumps(self.discovery_payload).encode('utf-8'), qos=0)
         print(f"Published discovery to {self.discovery_topic}")

@@ -48,11 +48,25 @@ logger.info(f"Password: {password} (type: {type(password)})")
 
 sensor_configs = {}
 
-def on_connect(client, userdata, flags, reason_code):
+def on_connect(client, reason_code):
+    """
+    Callback when the client connects to the MQTT broker.
+
+    Parameters:
+        client: The MQTT client instance.
+        reason_code: The connection result.
+    """
     logger.info(f"Connected with result code {reason_code}")
     client.subscribe("general/config_request")
 
-def on_message(client, userdata, message):
+def on_message(client, message):
+    """
+    Callback when a message is received on a subscribed topic.
+
+    Parameters:
+        client: The MQTT client instance.
+        message: The received MQTT message.
+    """
     payload = message.payload.decode()
     try:
         mac_address = payload
@@ -71,6 +85,12 @@ def on_message(client, userdata, message):
         logger.error("Received invalid JSON data")
 
 def load_sensor_configs(config_folder):
+    """
+    Load sensor configurations from JSON files in the specified folder.
+    
+    Parameters:
+        config_folder (str): The folder containing JSON configuration files.
+    """
     global sensor_configs
     
     for filename in os.listdir(config_folder):

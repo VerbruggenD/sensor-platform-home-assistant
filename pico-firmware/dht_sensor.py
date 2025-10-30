@@ -6,6 +6,16 @@ import time
 # Specific Sensor Implementation for DHT11
 class DHT11Sensor(Sensor):
     def __init__(self, mqtt_client, name, room, pins, mac_address):
+        """
+        Initialize the DHT11 sensor.
+
+        Parameters:
+            mqtt_client: The MQTT client for publishing data.
+            name (str): The name of the sensor.
+            room (str): The room where the sensor is located.
+            pins (dict): The pin configuration for the sensor.
+            mac_address (str): The MAC address of the device.
+        """
         super().__init__(name, room, "DHT11", "digital-IO", pins, mac_address, 10)
         
         # Initialize the sensor on the specified pin
@@ -22,6 +32,12 @@ class DHT11Sensor(Sensor):
         self.discover()
     
     def read_measurement(self):
+        """
+        Read measurements from the DHT11 sensor and publish them via MQTT.
+
+        Returns:
+            dict: A dictionary containing temperature and humidity readings.
+        """
         try:
             self.dht_sensor.measure()  # Trigger measurement
             

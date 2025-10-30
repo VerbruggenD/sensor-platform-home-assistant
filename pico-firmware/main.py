@@ -13,6 +13,13 @@ TIMEOUT = 30  # Time to wait for a response before retrying (in seconds)
 request_pending = False
 
 def request_config(client, mac_address):
+    """
+    Send a configuration request to the MQTT broker.
+
+    Parameters:
+        client (mqtt.MQTTHandler): The MQTT client to use for publishing.
+        mac_address (string): The MAC address of the device.
+    """
     global request_pending
     try:
         print(f"Requesting config for {mac_address}")
