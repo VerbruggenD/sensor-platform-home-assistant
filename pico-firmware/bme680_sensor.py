@@ -4,7 +4,7 @@ import time
 from bme680 import *
 
 class Bme680Sensor(Sensor):
-    def __init__(self, mqtt_client, name, room, pins, mac_address):
+    def __init__(self, mqtt_client, mac_address, config):
         """
         Initialize the BME680 sensor.
 
@@ -15,6 +15,9 @@ class Bme680Sensor(Sensor):
             pins (dict): The pin configuration for the sensor.
             mac_address (str): The MAC address of the device.
         """
+        name = config.get('name')
+        room = config.get('room')
+        pins = config.get('pins', {})
         super().__init__(name, room, "BME680", "I2C", pins, mac_address, 10)
 
         voltage = Pin(21, Pin.OUT)  # Use pin 21 for power control

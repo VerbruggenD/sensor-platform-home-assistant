@@ -5,7 +5,7 @@ import time
 
 # Specific Sensor Implementation for DHT11
 class DHT11Sensor(Sensor):
-    def __init__(self, mqtt_client, name, room, pins, mac_address):
+    def __init__(self, mqtt_client, mac_address, config):
         """
         Initialize the DHT11 sensor.
 
@@ -16,6 +16,10 @@ class DHT11Sensor(Sensor):
             pins (dict): The pin configuration for the sensor.
             mac_address (str): The MAC address of the device.
         """
+        name = config.get('name')
+        room = config.get('room')
+        pins = config.get('pins', {})
+
         super().__init__(name, room, "DHT11", "digital-IO", pins, mac_address, 10)
         
         # Initialize the sensor on the specified pin

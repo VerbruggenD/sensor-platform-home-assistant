@@ -85,31 +85,24 @@ class Config:
         self.sensors = []
         for sensor_data in config_data.get('sensors', []):
             sensor_type = sensor_data.get('type')
-            name = sensor_data.get('name')
-            room = sensor_data.get('room')
-            pins = sensor_data.get('pins', {})
             
             if sensor_type == 'DHT11':
                 # Handle DHT11 sensor
-                self.sensors.append(DHT11Sensor(self.mqtt_client.client, name, room, pins, self.mac_address))
-                print(f"Added DHT sensor {name} to list")
+                self.sensors.append(DHT11Sensor(self.mqtt_client.client, self.mac_address, sensor_data))
+                print(f"Added DHT sensor to list")
             elif sensor_type == 'BME680':
                 # Handle BME280 sensor
-                self.sensors.append(Bme680Sensor(self.mqtt_client.client, name, room, pins, self.mac_address))
-                print(f"Added BME680 sensor {name} to list")
+                self.sensors.append(Bme680Sensor(self.mqtt_client.client, self.mac_address, sensor_data))
+                print(f"Added BME680 sensor to list")
             else:
                 print(f"Unknown sensor type: {sensor_type}")
 
         self.actuators = []
         for actuator_data in config_data.get('actuators', []):
             actuator_type = actuator_data.get('type')
-            name = actuator_data.get('name')
-            room = actuator_data.get('room')
-            pins = actuator_data.get('pins', {})
-            defaultState = actuator_data.get('defaultState', None)
 
             if actuator_type == 'switch':
-                self.actuators.append(Switch(self.mqtt_client, name, room, pins, self.mac_address, defaultState))
+                self.actuators.append(Switch(self.mqtt_client, self.mac_address, actuator_data))
                 print(f"Added relay {name} to list")
             
             else:

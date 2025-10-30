@@ -2,12 +2,13 @@ import json
 import os
 import time
 import paho.mqtt.client as mqtt
-from enum import Enum
 from datetime import datetime
 import threading
 import logging
 
 from logging.handlers import TimedRotatingFileHandler
+
+from heartbeat import DeviceHeartbeat, State
 
 # Create a logger
 logger = logging.getLogger('my_logger')
@@ -78,7 +79,7 @@ def on_heartbeat_message(msg):
     mac_address = msg.payload.decode("utf-8")
     logger.info(f"Received response {mac_address}")
     if mac_address in devices:
-        devices[mac_address].newPing(True)  # Device responded, mark it as online
+        devices[mac_address].handleNewPing(True)  # Device responded, mark it as online
         if mac_address in device_events:
             device_events[mac_address].set()
             del device_events[mac_address]
@@ -113,86 +114,8 @@ def handle_timeout(mac_address):
     Parameters:
         mac_address (str): The MAC address of the device.
     """
-    devices[mac_address].newPing(False)
+    devices[mac_address].handleNewPing(False)
     logger.warning(f"No response from {mac_address}, current state: {devices[mac_address].state}")
-
-class State(Enum):
-    """
-    Device states for heartbeat monitoring.
-    """
-    ONLINE = 1
-    DISRUPTED = 2
-    OFFLINE = 3
-    DISABLED = 4
-
-class DeviceHeartbeat:
-    def __init__(self, macAddress, sensors, actuators, state):
-        """
-        Initialize a DeviceHeartbeat instance.
-
-        Parameters:
-            macAddress (str): The MAC address of the device.
-            sensors (list): List of sensors associated with the device.
-            actuators (list): List of actuators associated with the device.
-            state (State): Initial state of the device.
-        """
-        self.macAddress = macAddress
-        self.state = state
-        self.sensors = sensors
-        self.actuators = actuators
-
-    def publish_availability(self, availability):
-        """
-        Publish the availability status to MQTT topics for all sensors and actuators.
-
-        Parameters:
-            availability (str): The availability status ("online" or "offline").
-        """
-        try:
-            for sensor in self.sensors:
-                topic = f"{sensor['room']}/{self.macAddress}-{sensor['name']}/availability"
-                mqttc_heartbeat.publish(topic, payload=availability, qos=0)
-                logger.info(f"Published '{availability}' to {topic}")
-            for actuator in self.actuators:
-                topic = f"{actuator['room']}/{self.macAddress}-{actuator['name']}/availability"
-                mqttc_heartbeat.publish(topic, payload=availability, qos=0)
-                logger.info(f"Published '{availability}' to {topic}")
-        except Exception as e:
-            logger.error(f"Failed to publish availability for {self.macAddress}: {e}")
-
-    def badPing(self):
-        """
-        Handle a bad ping (no response) from the device.
-        """
-        if self.state == State.DISRUPTED:
-            self.state = State.OFFLINE
-            self.publish_availability("offline")
-        elif self.state == State.ONLINE:
-            self.state = State.DISRUPTED
-
-    def goodPing(self):
-        """
-        Handle a good ping (response) from the device.
-        """
-        if self.state == State.DISABLED:
-            return
-        if self.state != State.ONLINE:
-            self.state = State.ONLINE
-            self.publish_availability("online")
-
-    def newPing(self, result):
-        """
-        Process a new ping result.
-        
-        Parameters:
-            result (bool): True if the ping was successful, False otherwise.
-        """
-        if self.state == State.DISABLED:
-            return
-        if not result:
-            self.badPing()
-        else:
-            self.goodPing()
 
 def load_sensor_configs(config_folder):
     """
@@ -220,7 +143,7 @@ def load_sensor_configs(config_folder):
                         sensor_configs[mac_address_normalized] = json_data
                         
                         if mac_address_normalized not in devices:
-                            devices[mac_address_normalized] = DeviceHeartbeat(mac_address_normalized, sensors, actuators, State.OFFLINE)
+                            devices[mac_address_normalized] = DeviceHeartbeat(mac_address_normalized, sensors, actuators, State.OFFLINE, mqttc_heartbeat)
         logger.info(f"Loaded sensor configurations for {len(devices)} devices")
     except Exception as e:
         logger.error(f"Failed to load sensor configurations: {e}")
@@ -232,7 +155,6 @@ def main():
 
     config_folder = 'config'
     global sensor_configs
-    sensor_configs = load_sensor_configs(config_folder)
     
     try:
         mqttc_heartbeat = mqtt.Client()
@@ -240,6 +162,8 @@ def main():
         mqttc_heartbeat.on_connect = on_heartbeat_connect
         mqttc_heartbeat.on_message = on_heartbeat_message
         mqttc_heartbeat.connect(broker_address, broker_port, 60)
+
+        sensor_configs = load_sensor_configs(config_folder)
 
         mqttc_heartbeat.loop_start()  # Start MQTT loop in background
 

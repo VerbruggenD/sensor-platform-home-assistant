@@ -4,7 +4,7 @@ import time
 import json
 
 class Switch(Actuator):
-    def __init__(self, mqtt_client, name, room, pins, mac_address, defaultState):
+    def __init__(self, mqtt_client, mac_address, config):
         """
         Initialize the Switch actuator.
 
@@ -16,6 +16,10 @@ class Switch(Actuator):
             mac_address (str): The MAC address of the device.
             defaultState (str): The default state of the switch ("ON" or "OFF").
         """
+        name = config.get('name')
+        room = config.get('room')
+        pins = config.get('pins', {})
+        defaultState = config.get('defaultState', "OFF")
         super().__init__(name, room, "Switch", "digital-IO", pins, mac_address, defaultState)
 
         # self.relay_pin = machine.Pin(pins['data'])
