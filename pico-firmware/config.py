@@ -4,7 +4,6 @@ import json
 from sensorInterface import Sensor
 from dht_sensor import DHT11Sensor
 from switch import Switch
-from bme680_sensor import Bme680Sensor
 
 class Config:
     """
@@ -90,10 +89,7 @@ class Config:
                 # Handle DHT11 sensor
                 self.sensors.append(DHT11Sensor(self.mqtt_client.client, self.mac_address, sensor_data))
                 print(f"Added DHT sensor to list")
-            elif sensor_type == 'BME680':
-                # Handle BME280 sensor
-                self.sensors.append(Bme680Sensor(self.mqtt_client.client, self.mac_address, sensor_data))
-                print(f"Added BME680 sensor to list")
+
             else:
                 print(f"Unknown sensor type: {sensor_type}")
 
@@ -103,7 +99,7 @@ class Config:
 
             if actuator_type == 'switch':
                 self.actuators.append(Switch(self.mqtt_client, self.mac_address, actuator_data))
-                print(f"Added relay {name} to list")
+                print(f"Added relay to list")
             
             else:
                 print(f"Unknown actuator type: {actuator_type}")
