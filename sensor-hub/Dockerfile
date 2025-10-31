@@ -14,6 +14,7 @@ WORKDIR /app
 COPY requirements.txt .
 COPY config_server.py .
 COPY heartbeat_service.py .
+COPY heartbeat.py .
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Install Python dependencies
