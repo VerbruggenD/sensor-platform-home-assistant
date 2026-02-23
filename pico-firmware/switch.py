@@ -20,7 +20,7 @@ class Switch(Actuator):
         room = config.get('room')
         pins = config.get('pins', {})
         defaultState = config.get('defaultState', "OFF")
-        super().__init__(name, room, "Switch", "digital-IO", pins, mac_address, defaultState)
+        super().__init__(name, room, "Switch", pins, mac_address, defaultState, is_switch=True)
 
         # self.relay_pin = machine.Pin(pins['data'])
         self.relay_pin = Pin(pins['data'], Pin.OUT)
