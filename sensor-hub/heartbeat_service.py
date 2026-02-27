@@ -55,7 +55,7 @@ sensor_configs = {}
 devices = {}
 device_events = {}
 
-def on_heartbeat_connect(client, rc):
+def on_heartbeat_connect(client, userdata, flags, rc):
     """
     Callback when the heartbeat client connects to the MQTT broker.
 
@@ -69,7 +69,7 @@ def on_heartbeat_connect(client, rc):
         logger.error(f"Heartbeat thread connection failed with result code {rc}")
     client.subscribe("heartbeat/response")
 
-def on_heartbeat_message(msg):
+def on_heartbeat_message(client, userdata,msg):
     """
     Callback when a heartbeat response message is received.
 

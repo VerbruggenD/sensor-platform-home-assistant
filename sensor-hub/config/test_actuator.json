@@ -2,7 +2,7 @@
     "mac-address": "28:cd:c1:0d:6d:27",
     "actuators": [
         {
-            "type": "relay",
+            "type": "switch",
             "name": "onboard-led",
             "interface": "digital-IO",
             "pins": {

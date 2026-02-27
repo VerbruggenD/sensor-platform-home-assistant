@@ -48,7 +48,7 @@ logger.info(f"Password: {password} (type: {type(password)})")
 
 sensor_configs = {}
 
-def on_connect(client, reason_code):
+def on_connect(client, userdata, flags, reason_code):
     """
     Callback when the client connects to the MQTT broker.
 
@@ -59,7 +59,7 @@ def on_connect(client, reason_code):
     logger.info(f"Connected with result code {reason_code}")
     client.subscribe("general/config_request")
 
-def on_message(client, message):
+def on_message(client, userdata, message):
     """
     Callback when a message is received on a subscribed topic.
 

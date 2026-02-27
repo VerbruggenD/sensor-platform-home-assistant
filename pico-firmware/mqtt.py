@@ -98,11 +98,11 @@ class MQTTHandler:
 
         # Delegate the message handling to the config handler if it's set
         if self.config_handler and topic == "general/config_response":
-            self.config_handler.handle_config(topic, msg)
+            self.config_handler.handle_config(msg)
 
         # Handle heartbeat requests
         elif topic.startswith("heartbeat/"):
-            self.handle_heartbeat(topic, msg)
+            self.handle_heartbeat(topic)
 
         else:
             for handler in self.handlers:
